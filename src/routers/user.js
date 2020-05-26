@@ -1,5 +1,6 @@
 const express = require('express')
 const router = new express.Router()
+const auth = require('../middleware/auth')
 const User = require('../models/user')
 
 router.post('/users', async (req, res) => {
@@ -11,7 +12,7 @@ router.post('/users', async (req, res) => {
         res.status(201).send({user, token})
     }
     catch(e){
-        res.status(400).send()
+        res.status(400).send(e)
     }
 })
 
@@ -26,13 +27,10 @@ router.post('/users/login', async (req,res) =>{
     }
 })
 
-router.get('/users',(req,res) => {
-    
-    User.find({}).then((user) => {
-        res.send(user)
-    }).catch((e)=>{
-        res.status(500).send()
-    })
+
+// This route will show the details of the user currently signed in
+router.get('/users/me',auth, async(req,res) => {
+    res.send(req.user)
 })
 
 router.get('/users/:id', (req, res)=>{
