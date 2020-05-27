@@ -8,11 +8,11 @@ const auth = async (req, res, next ) => {
         const token = req.header('Authorization').replace('Bearer ','')
         const decode = jwt.verify(token , 'thisismynewtoken')
         const user = await User.findOne({ _id : decode._id, 'token.token' : token })
-        console.log(user)
         if(!user){
             throw new Error()
         }
 
+        req.token = token
         req.user = user
         next()
 
