@@ -55,7 +55,20 @@ const userSchema = mongoose.Schema({
         }
     }]
 })
-    
+
+// This method will be called whenever a object has to be converted to a JSON object 
+userSchema.methods.toJSON = function () {
+    const user = this
+    const userObject = user.toObject()
+
+    // Deleting the object attributes which we send to the user in response
+
+    delete userObject.password
+    delete userObject.token
+
+    return userObject
+}
+
 userSchema.methods.generateAuthToken = async function () { 
     const user = this
     const  token = jwt.sign({ _id : user._id.toString() }, 'thisismynewtoken')
