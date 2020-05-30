@@ -11,6 +11,13 @@ const Task = mongoose.model('Task',{
         type : Boolean,
         trim : true,
         default : false
+    },
+    owner : {
+        // The data stored in owner will be a mongodb object ID 
+        type : mongoose.Schema.Types.ObjectId,
+        required : true,
+        ref : 'User'
+
     }
 })
 

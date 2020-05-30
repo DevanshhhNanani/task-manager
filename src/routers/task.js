@@ -1,20 +1,38 @@
 const express = require('express')
 const Task = require('../models/tasks')
+const auth = require('../middleware/auth')
 const router = new express.Router()
 
-
-router.post('/tasks',(req,res)=>{
+// Endpoint for creating new tasks
+router.post('/tasks', auth, async (req,res)=>{
     
-    const task = new Task(req.body)
-
-    task.save().then(()=>{
-        res.status(201).send(task)
-    }).catch((e)=>{
-        res.status(400).send(e)
+    const task =new Task({
+        // Given below is a ES6 spread operator basically it's a way to copy the properties of one operator to another
+        ...req.body,
+        owner : req.user._id
     })
+
+    try{
+        await task.save()
+        res.status(200).send(task)
+    }catch(e){
+        res.status(400).send()
+    }
 })
 
-router.get('/tasks',(req, res)=>{
+// Endpoint to get all the tasks of the user logged in 
+router.get('/tasks', auth ,async(req, res)=>{
+    try {
+        const tasks = await Task.find({owner : req.user._id})
+        
+        res.send(tasks)
+    } catch (error) {
+        res.status(500).send()
+    }
+    
+    
+    
+    
     Task.find({}).then((tasks)=>{
         res.send(tasks)
     }).catch((e)=>{
@@ -22,52 +40,59 @@ router.get('/tasks',(req, res)=>{
     })
 })
 
-router.get('/tasks/:id',(req, res)=>{
+// Endpoint to get a task by id 
+router.get('/tasks/:id', auth , async(req, res)=>{
     const _id = req.params.id
+    try {
+        // We will only be able to get the task if the task id and user id matches
+        const task = await Task.findOne({ _id, owner : req.user._id})
 
-    Task.findById(_id).then((task)=>{
         if (!task){
-            res.status(404).send()
+            return res.status(404).send()
         }
         res.send(task)
-    }).catch((e)=> {
-        res.status(500).send()
-    })
+
+    } catch (error) {
+        res.status(500).send(error)
+    }
+    
 })
 
-router.patch('/tasks/:id', async (req, res)=> {
+
+// Endpoint for upating task
+router.patch('/tasks/:id', auth, async (req, res)=> {
     const AllowedUpdates = ['description','completed']
     const update = Object.keys(req.body)
     const isValidOperation = update.every((updates) => AllowedUpdates.includes(updates) )
 
     if(!isValidOperation){
-        return res.status(400).send({error : "Invalid Operation"})
+        return res.status(500).send({error : "Invalid Operation"})
     }
     try{
-        // const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new : true, runValidators: true} )
 
-        const task = await Task.findById(req.params.id)
-        update.forEach((updates) => {
-            task[updates] =  req.body[updates] 
-        })
+        const task = await Task.findOne({_id : req.params.id , owner : req.user._id})
         
-        console.log('before saving')
-        await task.save()
-
         if(!task){
             return res.status(404).send()
         }
+        update.forEach((updates) => {
+            task[updates] =  req.body[updates] 
+        })
+        console.log(task)
+        await task.save()
         res.send(task)
+
     }
     catch(e){
         res.status(400).send(e)
     }
 })
 
-router.delete('/tasks/:id',async(req, res)=>{
+// Endpoint for deleting task
+router.delete('/tasks/:id', auth ,async(req, res)=>{
     
     const _id = req.params.id
-    const task = await Task.findByIdAndDelete(_id)
+    const task = await Task.findOneAndDelete({ _id , owner : req.user._id})
     try{
     if(!task){
         return res.status(404).send()

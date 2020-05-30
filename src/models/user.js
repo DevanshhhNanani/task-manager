@@ -56,6 +56,16 @@ const userSchema = mongoose.Schema({
     }]
 })
 
+// it's virtual because we are not changing what we store in the document instead it's a way for mongoose to establish a relationship 
+userSchema.virtual('tasks', {
+    ref : 'Task',
+    // Local field is where the local data is stored and connect with foreign field  
+    localField : '_id',
+    // Foreign field is name of the field on the Task model that's going to create the relationship  
+    foreignField : 'owner'
+})
+
+
 // This method will be called whenever a object has to be converted to a JSON object 
 userSchema.methods.toJSON = function () {
     const user = this
