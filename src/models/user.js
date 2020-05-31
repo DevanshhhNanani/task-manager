@@ -55,6 +55,8 @@ const userSchema = mongoose.Schema({
             required : true
         }
     }]
+},{
+    timestamps : true
 })
 
 // it's virtual because we are not changing what we store in the document instead it's a way for mongoose to establish a relationship 
