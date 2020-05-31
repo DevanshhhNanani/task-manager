@@ -22,22 +22,24 @@ router.post('/tasks', auth, async (req,res)=>{
 
 // Endpoint to get all the tasks of the user logged in 
 router.get('/tasks', auth ,async(req, res)=>{
+    const match = {}
+
+    if (req.query.completed){
+        // Below given line will set match.completed to true (boolean) if req.query.completed is set to true(string)
+        match.completed = req.query.completed === 'true'
+    }
+
     try {
-        const tasks = await Task.find({owner : req.user._id})
+        await req.user.populate({
+            path : 'tasks',
+            match
+        }).execPopulate()
         
-        res.send(tasks)
+        res.send(req.user.tasks)
     } catch (error) {
         res.status(500).send()
     }
-    
-    
-    
-    
-    Task.find({}).then((tasks)=>{
-        res.send(tasks)
-    }).catch((e)=>{
-        res.status(500)
-    })
+   
 })
 
 // Endpoint to get a task by id 
