@@ -6,7 +6,7 @@ const auth = async (req, res, next ) => {
     try{
         // Space after bearer is critical as we need to remove the space after Bearer in our value for key, so it will be decoded properly
         const token = req.header('Authorization').replace('Bearer ','')
-        const decode = jwt.verify(token , 'thisismynewtoken')
+        const decode = jwt.verify(token , process.env.JWT_SECRET)
         const user = await User.findOne({ _id : decode._id, 'token.token' : token })
         if(!user){
             throw new Error()
